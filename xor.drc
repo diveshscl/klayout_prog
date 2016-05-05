@@ -1,0 +1,33 @@
+# Save as "xor.drc" and run with:
+#   klayout -b -r xor.drc -rd gds1=a.gds -rd gds2=b.gds -rd out=out.gds
+#
+# Useful options:
+#
+# * verbose log:
+#   verbose 
+#
+# * enable tiling:
+#   tiles(1.mm, 1.mm)
+#
+# * use 4 cores in parallel (with tiles):
+#   threads(4)
+#
+
+l1 = layout($gds1)
+l2 = layout($gds2)
+
+target($out)
+
+layers = []
+[ l1, l2 ].each do |l|
+  l.layout.layer_indices.each do |index|
+    info = l.layout.get_info(index)
+    layers << [info.layer, info.datatype ]
+  end
+end
+
+# collect layers
+layers.sort.uniq.each do |l,d|
+  log "Running XOR between #{l}/#{d} .."
+  (l1.input(l, d) ^ l2.input(l, d)).output(l, d)
+end
